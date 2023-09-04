@@ -17,7 +17,7 @@ const Home = ({ navigation }) => {
   const [c7, setc7] = React.useState(false);
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
-  const [data, setdata] = useState([])
+  const [saving, setsaving] = useState(false)
 
   const [items, setItems] = useState([
     { label: 'Full-time', value: 'Full-time' },
@@ -28,7 +28,7 @@ const Home = ({ navigation }) => {
   const createTable = () => {
     db.transaction((tx) => {
       tx.executeSql(
-        'CREATE TABLE IF NOT EXISTS attendent (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT,salary TEXT,worktime TEXT,day1 INTEGER,day2 INTEGER,day3 INTEGER,day4 INTEGER,day5 INTEGER,day6 INTEGER,day7 INTEGER)',
+        'CREATE TABLE IF NOT EXISTS attendent (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT,salary TEXT,worktime TEXT,day1 INTEGER,day2 INTEGER,day3 INTEGER,day4 INTEGER,day5 INTEGER,day6 INTEGER,day7 INTEGER,totalDays INTEGER)',
         [],
         () => {
           console.log('Table created successfully!');
@@ -47,15 +47,18 @@ const Home = ({ navigation }) => {
         backgroundColor: '#f54e54'
       });
     } else {
+      setsaving(true)
       db.transaction((tx) => {
         tx.executeSql(
-          'INSERT INTO attendent (name, role,salary,worktime,day1,day2,day3,day4,day5,day6,day7) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-          [name, role, salary, value, c1, c2, c3, c4, c5, c6, c7],
+          'INSERT INTO attendent (name, role,salary,worktime,day1,day2,day3,day4,day5,day6,day7,totalDays) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+          [name, role, salary, value, c1, c2, c3, c4, c5, c6,0],
           (_, result) => {
             Snackbar.show({
               text: 'Attendent added successfully',
               duration: Snackbar.LENGTH_SHORT,
             });
+            navigation.navigate('Attendents')
+            setsaving(false)
             setname('')
             setRole('')
             setSalary('')
@@ -68,17 +71,62 @@ const Home = ({ navigation }) => {
             setc7(false)
           },
           (_, error) => {
+            console.log(JSON.stringify(_))
             ToastAndroid.show('Error adding attendent:', ToastAndroid.SHORT);
           }
         );
       });
     }
   };
-
-  useEffect(() => {
-    createTable()
-  }, [])
-
+  useEffect(() => { createTable() }, [])
+  // const countDayInMonth = (year, month, dayNumber) => {
+  //   const firstDayOfMonth = new Date(year, month - 1, 1);
+  //   let count = 0;
+  //   for (let day = 1; day <= 31; day++) {
+  //     const currentDate = new Date(year, month - 1, day);
+  //     if (currentDate.getMonth() !== month - 1) {
+  //       break;
+  //     }
+  //     if (currentDate.getDay() === dayNumber) {
+  //       count++;
+  //     }
+  //   }
+  //   return count;
+  // }
+  // const passDay = () => {
+  //   let totalcount = 0;
+  //   let month = new Date().getMonth() + 1
+  //   let year = new Date().getFullYear()
+  //   if (c1) {
+  //     let mon = countDayInMonth(year, month, 1)
+  //     totalcount += mon;
+  //   }
+  //   if (c2) {
+  //     let tu = countDayInMonth(year, month, 2)
+  //     totalcount += tu
+  //   }
+  //   if (c3) {
+  //     let wed = countDayInMonth(year, month, 3)
+  //     totalcount += wed
+  //   }
+  //   if (c4) {
+  //     let th = countDayInMonth(year, month, 4)
+  //     totalcount += th
+  //   }
+  //   if (c5) {
+  //     let fr = countDayInMonth(year, month, 5)
+  //     totalcount += fr
+  //   }
+  //   if (c6) {
+  //     let st = countDayInMonth(year, month, 6)
+  //     totalcount += st
+  //   }
+  //   if (c7) {
+  //     let sun = countDayInMonth(year, month, 0)
+  //     totalcount += sun
+  //   }
+  //   return totalcount;
+  // }
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>ADD new attendent here!</Text>
@@ -90,7 +138,7 @@ const Home = ({ navigation }) => {
         <TextInput style={styles.input} label={'Role'} placeholder='Enter your role' mode='outlined' value={role} onChangeText={(txt) => setRole(txt)} placeholderTextColor={'#777777'} />
       </View>
       <View style={{ margin: 10, marginHorizontal: 15, width: '90%' }}>
-        <TextInput style={styles.input} label={'Salary'} placeholder='Enter your salary' mode='outlined' value={salary} onChangeText={(txt) => setSalary(txt)} placeholderTextColor={'#777777'} keyboardType='number-pad'/>
+        <TextInput style={styles.input} label={'Salary'} placeholder='Enter your salary' mode='outlined' value={salary} onChangeText={(txt) => setSalary(txt)} placeholderTextColor={'#777777'} keyboardType='number-pad' />
       </View>
       <DropDownPicker
         open={open}
@@ -136,7 +184,7 @@ const Home = ({ navigation }) => {
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <TouchableOpacity style={styles.btn} onPress={() => createAttendent()}>
-          <Text style={styles.btnTxt}>Save</Text>
+          <Text style={styles.btnTxt}>{saving ? 'creating...' : 'Save'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate('Attendents')}>
           <Text style={styles.btnTxt}>Attendent View</Text>
@@ -200,9 +248,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#000080',
     fontWeight: '600',
-    alignSelf:'flex-start',
-    marginHorizontal:25,
-    marginTop:20,
+    alignSelf: 'flex-start',
+    marginHorizontal: 25,
+    marginTop: 20,
     fontFamily: 'Poppins-SemiBold',
   },
 })

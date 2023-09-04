@@ -16,7 +16,6 @@ const Attendents = ({ navigation }) => {
                 for (var i = 0; i < length; i++) {
                     lst.push(resultSet.rows.item(i))
                 }
-                console.log(lst)
                 setdata(lst)
                 setloading(false)
             }, (error) => {
@@ -85,7 +84,6 @@ const Attendents = ({ navigation }) => {
         </>
     )
 }
-
 export default Attendents
 const styles = StyleSheet.create({
     container: {
