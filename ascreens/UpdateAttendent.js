@@ -44,7 +44,6 @@ const UpdateAttendent = ({ route, navigation }) => {
             });
         }
     };
-
     useEffect(() => {
         setname(user.name)
         setRole(user.role)

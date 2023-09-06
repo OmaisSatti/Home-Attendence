@@ -4,13 +4,14 @@ import SQLite from 'react-native-sqlite-storage';
 const Report = ({ route }) => {
     const [loading, setloading] = useState(true);
     const [present, setpresent] = useState(0)
-    const [absent, setabsent] = useState(0)
+    const [absenth, setabsenth] = useState(0)
+    const [absentq, setabsentq] = useState(0)
     const { user } = route.params
     const db = SQLite.openDatabase({ name: 'attendentDB.db', location: 'default' });
     useEffect(() => { loadData(); }, [])
     const loadData = async () => {
         lst = []
-        let p = 0, a = 0;
+        let p = 0, ah = 0, aq = 0;
         let sql = "SELECT * FROM attendenceRecord WHERE userId = ?";
         db.transaction((tx) => {
             tx.executeSql(sql, [user.id], (tx, resultSet) => {
@@ -19,10 +20,15 @@ const Report = ({ route }) => {
                     if (resultSet.rows.item(i).status === 'P') {
                         p++;
                     } else {
-                        a++;
+                        if (resultSet.rows.item(i).absentTime === 'H') {
+                            ah++;
+                        } else {
+                            aq++;
+                        }
                     }
                 }
-                setabsent(a)
+                setabsenth(ah)
+                setabsentq(aq)
                 setpresent(p)
                 setloading(false)
             }, (error) => {
@@ -44,7 +50,7 @@ const Report = ({ route }) => {
                 </View>
                 <View style={styles.rowView}>
                     <Text style={styles.label}>Salary:</Text>
-                    <Text style={styles.value}>{user.salary}</Text>
+                    <Text style={styles.value}>{user.salary - (absenth * 500) - (absentq * 250)}</Text>
                 </View>
                 <View style={styles.rowView}>
                     <Text style={styles.label}>Timing:</Text>
@@ -56,7 +62,7 @@ const Report = ({ route }) => {
                 </View>
                 <View style={styles.rowView}>
                     <Text style={styles.label}>Absent:</Text>
-                    <Text style={[styles.value, { color: 'red', fontWeight: 'bold' }]}>{absent}</Text>
+                    <Text style={[styles.value, { color: 'red', fontWeight: 'bold' }]}>{absentq + absenth}</Text>
                 </View>
             </View>
         </View>

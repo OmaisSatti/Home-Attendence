@@ -4,6 +4,8 @@ import { TextInput, Checkbox } from 'react-native-paper'
 import DropDownPicker from 'react-native-dropdown-picker';
 import Snackbar from 'react-native-snackbar';
 import SQLite from 'react-native-sqlite-storage';
+import { ActivityIndicator, IconButton } from 'react-native-paper';
+import DateTimePicker from '@react-native-community/datetimepicker';
 const Home = ({ navigation }) => {
   const [name, setname] = useState('')
   const [role, setRole] = useState('')
@@ -18,6 +20,10 @@ const Home = ({ navigation }) => {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
   const [saving, setsaving] = useState(false)
+  const [startTime, setstartTime] = useState(new Date());
+  const [endTime, setendTime] = useState(new Date())
+  const [show, setShow] = useState(false);
+  const [show2, setShow2] = useState(false);
 
   const [items, setItems] = useState([
     { label: 'Full-time', value: 'Full-time' },
@@ -28,7 +34,7 @@ const Home = ({ navigation }) => {
   const createTable = () => {
     db.transaction((tx) => {
       tx.executeSql(
-        'CREATE TABLE IF NOT EXISTS attendent (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT,salary TEXT,worktime TEXT,day1 INTEGER,day2 INTEGER,day3 INTEGER,day4 INTEGER,day5 INTEGER,day6 INTEGER,day7 INTEGER,totalDays INTEGER)',
+        'CREATE TABLE IF NOT EXISTS attendent (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT,salary TEXT,worktime TEXT,day1 INTEGER,day2 INTEGER,day3 INTEGER,day4 INTEGER,day5 INTEGER,day6 INTEGER,day7 INTEGER,totalDays INTEGER,startTime TEXT,endTime TEXT)',
         [],
         () => {
           console.log('Table created successfully!');
@@ -50,8 +56,8 @@ const Home = ({ navigation }) => {
       setsaving(true)
       db.transaction((tx) => {
         tx.executeSql(
-          'INSERT INTO attendent (name, role,salary,worktime,day1,day2,day3,day4,day5,day6,day7,totalDays) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-          [name, role, salary, value, c1, c2, c3, c4, c5, c6,0],
+          'INSERT INTO attendent (name, role,salary,worktime,day1,day2,day3,day4,day5,day6,day7,totalDays,startTime,endTime) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+          [name, role, salary, value, c1, c2, c3, c4, c5, c6, c7, 0, startTime.toTimeString(), endTime.toTimeString()],
           (_, result) => {
             Snackbar.show({
               text: 'Attendent added successfully',
@@ -127,12 +133,23 @@ const Home = ({ navigation }) => {
   //   }
   //   return totalcount;
   // }
+  const onChange = (event, selectedDate) => {
+    const currentDate = selectedDate;
+    setShow(false);
+    setstartTime(currentDate);
+  };
+  const onChange2 = (event, selectedDate) => {
+    const currentDate = selectedDate;
+    setShow2(false);
+    setendTime(currentDate);
+  };
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>ADD new attendent here!</Text>
       <StatusBar backgroundColor={'#000080'} barStyle={'light-content'} />
       <View style={{ margin: 10, marginHorizontal: 15, width: '90%' }}>
-        <TextInput style={styles.input} mode='outlined' label={'Name'} placeholder='Enter your name' value={name} onChangeText={(txt) => setname(txt)} placeholderTextColor={'#777777'} />
+        <TextInput style={styles.input} mode='outlined' label={'Name'} placeholder='Enter your name' value={name}
+          onChangeText={(txt) => setname(txt)} placeholderTextColor={'#777777'} />
       </View>
       <View style={{ margin: 10, marginHorizontal: 15, width: '90%' }}>
         <TextInput style={styles.input} label={'Role'} placeholder='Enter your role' mode='outlined' value={role} onChangeText={(txt) => setRole(txt)} placeholderTextColor={'#777777'} />
@@ -145,12 +162,57 @@ const Home = ({ navigation }) => {
         value={value}
         placeholder='Select Timing'
         items={items}
-        style={{ width: '88%', marginHorizontal: 15, margin: 10, height: 60 }}
+        style={{ width: '90%', marginHorizontal: 15, margin: 10, height: 60 }}
         dropDownContainerStyle={{ width: '88%', marginHorizontal: 15 }}
         setOpen={setOpen}
         setValue={setValue}
         setItems={setItems}
       />
+      <View style={{ width: '93%', marginHorizontal: 20 }}>
+        <Text style={styles.inputTxt}>Start Time</Text>
+        <View style={styles.dateContainer}>
+          <Text style={styles.inputTxt}>{startTime.toTimeString()}</Text>
+          <IconButton
+            icon="clipboard-text-clock-outline"
+            mode="contained"
+            iconColor={'#000000'}
+            size={20}
+            onPress={() => setShow(!show)}
+          />
+        </View>
+        {show && (
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={startTime}
+            mode={'time'}
+            onChange={onChange}
+            display={'inline'}
+          />
+        )}
+      </View>
+
+      <View style={{ width: '93%', marginHorizontal: 20 }}>
+        <Text style={styles.inputTxt}>End Time</Text>
+        <View style={styles.dateContainer}>
+          <Text style={styles.inputTxt}>{endTime.toTimeString()}</Text>
+          <IconButton
+            icon="clipboard-text-clock-outline"
+            mode="contained"
+            iconColor={'#000000'}
+            size={20}
+            onPress={() => setShow2(!show2)}
+          />
+        </View>
+        {show2 && (
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={endTime}
+            mode={'time'}
+            onChange={onChange2}
+            display={'inline'}
+          />
+        )}
+      </View>
 
       {/* Day View start */}
       <View style={styles.dayView}>
@@ -200,6 +262,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     alignItems: 'center'
   },
+  dateContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    height: 60,
+    marginHorizontal: 5,
+    width: '95%',
+    borderRadius: 5,
+    paddingHorizontal: 15,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#777777',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+    gap: 10,
+  },
   day: {
     fontSize: 16,
     color: '#000000',
@@ -208,7 +286,7 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 60,
-    width: '95%',
+    width: '98%',
     color: '#000000',
     backgroundColor: '#ffffff',
     fontFamily: 'Roboto-Regular',
@@ -240,7 +318,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '90%',
+    width: '95%',
     padding: 10,
     marginTop: 10
   },
